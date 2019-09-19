@@ -7,13 +7,15 @@
 #include "process.h"
 #define COM1 0x3F8
 
-typedef struct {
+typedef struct _os3 {
   os3_process_t* processes;
 } os3_t;
 
 void os3_setup_gdt();
 void os3_setup_idt();
 void os3_setup_paging();
+os3_process_t *os3_new_process(struct _os3* os3);
+void os3_destroy_process(struct _os3* os3, os3_process_t process);
 
 /** Convert an integer to a string. */
 char *kitoa(int value, char *str, int base);
