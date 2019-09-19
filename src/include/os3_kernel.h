@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "liballoc_1_1.h"
 #define COM1 0x3F8
 
 void os3_setup_gdt();
