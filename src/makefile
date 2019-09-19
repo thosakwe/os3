@@ -4,6 +4,7 @@ export CFLAGS+=-I$(shell pwd)/include
 
 kernel.bin: boot.o interrupt_handler.o kernel.o \
 	liballoc_1_1.o process.o file_descriptor.o \
+	misc.o \
 	$(ARCH)/$(LIBARCH)
 	$(LD) -T linker.ld -o $@ -nostdlib $^
 

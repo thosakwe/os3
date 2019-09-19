@@ -2,6 +2,7 @@ export ARCH=i686
 export AR=$(ARCH)-elf-ar
 export AS=$(ARCH)-elf-as
 export CC=$(CLANG) $(CLANGFLAGS)
+export CFLAGS+=-std=gnu99
 export CLANG=clang
 export CLANGXX=clang++
 export CLANGFLAGS=--target=$(TARGET) -march=$(ARCH)
@@ -13,9 +14,15 @@ export LIBARCH=lib$(ARCH).a
 export QEMU=qemu-system-i386
 export TARGET=$(ARCH)-pc-none-elf
 
-.PHONY: all clean src/kernel.bin run-qemu
+.PHONY: all bochs clean src/kernel.bin run-qemu
 
 all: os3.iso
+
+debug: CFLAGS+= -g -DOS3_DEBUG=1
+debug: all
+
+bochs: debug
+	bochs -q -rc debug.rc
 
 clean:
 	find . \( -name '*.o' -o -name '*.a' \

@@ -1,0 +1,12 @@
+megs: 32
+romimage: file=/usr/local/share/bochs/BIOS-bochs-latest
+vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-slave: type=cdrom, path="os3.iso", status=inserted
+boot: cdrom
+log: log/bochs.log
+mouse: enabled=0
+clock: sync=realtime
+cpu: ips=70000000
+com1: enabled=1, mode=file, dev=/dev/stdout
+# display_library: sdl

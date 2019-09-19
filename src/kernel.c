@@ -6,6 +6,14 @@ void kernel_main(void)
 	os3.processes = NULL;
 
 	os3_setup_gdt();
-	os3_setup_idt();
-	os3_setup_paging();
+  kwrites("milestone");
+	// os3_setup_idt();
+	// os3_setup_paging();
+
+	// asm("int $0x2");
+	// kwrites("a");
+	// asm("int $0x5");
+	// asm("int $0x0d");
+	// asm("int $0x80");
+	// kwrites("b");
 }
