@@ -38,6 +38,8 @@ static inline void gdt_describe(gdt_entry_t *entry, uint32_t base,
   entry->limit_16_19_and_flags |= (flags & 0xf0);
 }
 
+extern void os3_flush_gdt(uint32_t ptr);
+
 // We don't use segmentation, so we provided a bare-minimum GDT.
 void os3_setup_gdt() {
   gdt_entry_t *null_descriptor = &gdt[0], *code_descriptor = &gdt[1],
@@ -57,4 +59,5 @@ void os3_setup_gdt() {
 
   // Load it!
   asm("lgdt %0" ::"m"(gdt_descriptor));
+  os3_flush_gdt((uint32_t)&gdt_descriptor);
 }

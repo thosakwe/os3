@@ -34,9 +34,10 @@
 .type os3_flush_idt, @function
 os3_flush_idt:
 	# Load the IDT from the stack.
-	movl 4(%esp), %eax
-	lidt (%eax)
-	sti
+	# movl 4(%esp), %eax
+	# popl %eax
+	# lidt (%eax)
+	# sti
 	ret
 
 isr 0

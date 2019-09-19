@@ -98,8 +98,7 @@ extern void isr48();
   (ptr)->always_zero = 0;                                                     \
   (ptr)->type_attr = (INTERRUPT_GATE_32_BIT |                                 \
 		      DESCRIPTOR_PRIVILEGE_RING##ring | DESCRIPTOR_PRESENT) | \
-		     0x60;                                                    \
-  (ptr)->type_attr = 0x8e;
+		     0x60;
 
 // (ptr)->type_attr = 0x8e;
 
@@ -215,8 +214,8 @@ void os3_setup_idt() {
   // DECLARE_ISR(48);
 
   // Now, load the IDT, and enable interrupts.
-  // asm volatile("lidt %0" ::"m"(idt_descriptor));
-  // asm volatile("sti");
+  asm volatile("lidt %0" ::"m"(idt_descriptor));
+  asm volatile("sti");
   // kwrites("IDT struct location: 0x");
   // kputi_r(&idt_descriptor, 16);
   // kwrites("IDT table[0] location: 0x");
