@@ -1,4 +1,5 @@
 export ARCH=i686
+export AR=$(ARCH)-elf-ar
 export AS=$(ARCH)-elf-as
 export CC=$(CLANG) $(CLANGFLAGS)
 export CLANG=clang
@@ -8,6 +9,7 @@ export CXX=$(CLANGXX) $(CLANGFLAGS)
 export CXXFLAGS+=-ffreestanding -fno-builtin -nostdlib \
 	-nostdinc -nostdinc++ -fno-rtti
 export LD=$(ARCH)-elf-ld
+export LIBARCH=lib$(ARCH).a
 export QEMU=qemu-system-i386
 export TARGET=$(ARCH)-pc-none-elf
 

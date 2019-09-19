@@ -21,7 +21,7 @@ void kwrites(const char *text) {
 void kputi(int val) { kputi_r(val, 10); }
 
 void kputi_r(int val, int base) {
-  char buf[33] = {0};
+  char buf[33];// = {0};
   kitoa(val, buf, base);
   kwrites(buf);
 }
