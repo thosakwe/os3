@@ -35,4 +35,4 @@ os3.iso: .iso/boot/kernel.bin
 	grub-mkrescue -o $@ .iso/
 
 run-qemu: os3.iso
-	$(QEMU) -cdrom $<
+	$(QEMU) -cdrom $< -serial file:/dev/stdout
