@@ -8,9 +8,7 @@
 //   * IPC channels to other processes
 
 typedef enum {
-  OS3_FD_STDIN,
-  OS3_FD_STDOUT,
-  OS3_FD_STDERR,
+  OS3_FD_STD_STREAM,
   OS3_FD_IPC
 } os3_fd_type_t;
 
