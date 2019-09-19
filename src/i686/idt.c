@@ -92,24 +92,23 @@ extern void isr48();
 
 #define INTERRUPT(n, ptr, handler, sel, ring)                                 \
   used_entries++;                                                             \
-  (ptr)->offset_0_15 = (((uint32_t)(&handler)) & 0xffff);                     \
-  (ptr)->offset_16_31 = (((uint32_t)(&handler)) >> 16) & 0xffff;              \
-  (ptr)->selector = (sel);                                                    \
-  (ptr)->always_zero = 0;                                                     \
-  (ptr)->type_attr = (INTERRUPT_GATE_32_BIT |                                 \
+  (ptr).offset_0_15 = (((uint32_t)(handler)) & 0xffff);                     \
+  (ptr).offset_16_31 = (((uint32_t)(handler)) >> 16) & 0xffff;              \
+  (ptr).selector = (sel);                                                    \
+  (ptr).always_zero = 0;                                                     \
+  (ptr).type_attr = (INTERRUPT_GATE_32_BIT |                                 \
 		      DESCRIPTOR_PRIVILEGE_RING##ring | DESCRIPTOR_PRESENT) | \
-		     0x60;
-
-// (ptr)->type_attr = 0x8e;
-
-idt_entry_t idt_entries[49];
+		     0x60;                                                    \
+  (ptr).type_attr = 0x8e;
+//
+idt_entry_t idt_entries[256];
 idt_descriptor_t idt_descriptor;
 int used_entries = 0;
 
 #define DECLARE_ISR(type) \
-  INTERRUPT((type), &idt_entries[(type)], (isr##type), 0x8, 0)
+  INTERRUPT((type), idt_entries[(type)], (isr##type), 0x08, 0)
 #define DECLARE_IRQ(type) \
-  INTERRUPT((type) + 32, &idt_entries[(type) + 32], (irq##type), 0x8, 0)
+  INTERRUPT((type) + 32, idt_entries[(type) + 32], (irq##type), 0x08, 0)
 
 static void irq_enable(uint8_t no) {
   uint16_t pic = PIC1;
@@ -122,6 +121,36 @@ static void irq_enable(uint8_t no) {
 }
 
 void os3_setup_idt() {
+  // Before we load the IDT, remap the PIC.
+  int pic1 = 0x20, pic2 = 0x28;
+
+  // Initialize
+  outb(PIC1, ICW1);
+  outb(PIC2, ICW1);
+
+  // Actually set the new offsets.
+  outb(PIC1 + 1, pic1);
+  outb(PIC2 + 1, pic2);
+
+  // Make PIC1 aware of PIC2.
+  outb(PIC1 + 1, 4);
+  outb(PIC2 + 1, 2);
+
+  // Send ICW4, then disable all IRQ's.
+  outb(PIC1 + 1, ICW4);
+  outb(PIC2 + 1, ICW4);
+  outb(PIC1 + 1, 0xff);
+  outb(PIC1 + 2, 0xff);
+
+  // Next, enable the interrupts we have set up.
+  for (int i = 0; i < used_entries; i++) {
+    irq_enable(i);
+  }
+
+  // IDT time.
+  kmemset(&idt_entries, 0, sizeof(idt_entries));
+  idt_descriptor.size = sizeof(idt_entries) - 1;
+
   DECLARE_ISR(0);
   DECLARE_ISR(1);
   DECLARE_ISR(2);
@@ -170,37 +199,6 @@ void os3_setup_idt() {
   DECLARE_IRQ(13);
   DECLARE_IRQ(14);
   DECLARE_IRQ(15);
-
-  // Before we load the IDT, remap the PIC.
-  int pic1 = 0x20, pic2 = 0x28;
-
-  // Initialize
-  outb(PIC1, ICW1);
-  outb(PIC2, ICW1);
-
-  // Actually set the new offsets.
-  outb(PIC1 + 1, pic1);
-  outb(PIC2 + 1, pic2);
-
-  // Make PIC1 aware of PIC2.
-  outb(PIC1 + 1, 4);
-  outb(PIC2 + 1, 2);
-
-  // Send ICW4, then disable all IRQ's.
-  outb(PIC1 + 1, ICW4);
-  outb(PIC2 + 1, ICW4);
-  outb(PIC1 + 1, 0xff);
-  outb(PIC1 + 2, 0xff);
-
-  // Next, enable the interrupts we have set up.
-  for (int i = 0; i < used_entries; i++) {
-    irq_enable(i);
-  }
-
-  // IDT time.
-  kmemset(&idt_entries, 0, sizeof(idt_entries));
-  idt_descriptor.size = sizeof(idt_entries) - 1;
-
   // This is CRITICAL: Align the pointer on 16 bits.
   // I spent several hours hunting this down.
   idt_descriptor.offset = (uint32_t)&idt_entries;
@@ -215,16 +213,18 @@ void os3_setup_idt() {
 
   // Now, load the IDT, and enable interrupts.
   asm volatile("lidt %0" ::"m"(idt_descriptor));
-  asm volatile("sti");
+  // asm volatile("sti");
   // kwrites("IDT struct location: 0x");
-  // kputi_r(&idt_descriptor, 16);
+  // kputi_r((uint32_t)&idt_descriptor, 16);
+	// kputc('\n');
   // kwrites("IDT table[0] location: 0x");
   // kputi_r(idt_descriptor.offset, 16);
+	// kputc('\n');
   // os3_flush_idt(&idt_descriptor);
 
   // TODO: Remove this
   // For now, only enable the keyboard.
-  // outb(PIC1 + 1, 0xfd);
-  // outb(PIC2 + 1, 0xff);
-  // asm volatile("sti");
+  outb(PIC1 + 1, 0xfd);
+  outb(PIC2 + 1, 0xff);
+  asm volatile("sti");
 }

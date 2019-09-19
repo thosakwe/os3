@@ -15,11 +15,11 @@ void kernel_main(void) {
   // kputi_r((uint32_t)&isr13, 16);
   // kputc('\n');
 
-  // asm("int $0x6");
-  // asm("int $0xf");
-  // asm("int $0x23");
+  asm("int $0x6");
+  asm("int $0xf");
+  asm("int $0x23");
   // kwrites("a");
-  // asm("int $0x5");
+  asm("int $0x5");
   // asm("int $0x0d");
   // asm("int $0x80");
   // kwrites("b");
