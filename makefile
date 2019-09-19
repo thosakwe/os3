@@ -12,7 +12,7 @@ export TARGET=$(ARCH)-pc-none-elf
 
 .PHONY: all clean src/kernel.bin
 
-all: src/kernel.bin
+all: os3.iso
 
 clean:
 	find . \( -name '*.o' -o -name '*.a' \
@@ -25,5 +25,8 @@ src/kernel.bin:
 
 .iso/boot/kernel.bin: src/kernel.bin
 	mkdir -p .iso/boot
-	cp -rp iso/ ./iso
+	cp -rp iso/ .iso/
 	cp $< $@
+
+os3.iso: .iso/boot/kernel.bin
+	grub-mkrescue -o $@ .iso/
