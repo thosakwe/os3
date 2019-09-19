@@ -26,13 +26,13 @@ src/kernel.bin:
 	$(MAKE) -C src
 	grub-file --is-x86-multiboot $@
 
-.iso/boot/kernel.bin: src/kernel.bin
-	mkdir -p .iso/boot
-	cp -rp iso/ .iso/
+.isodir/boot/kernel.bin: src/kernel.bin
+	mkdir -p .isodir/boot
+	cp -rp iso/ .isodir/
 	cp $< $@
 
-os3.iso: .iso/boot/kernel.bin
-	grub-mkrescue -o $@ .iso/
+os3.iso: .isodir/boot/kernel.bin
+	grub-mkrescue -o $@ .isodir/
 
 run-qemu: os3.iso
 	$(QEMU) -cdrom $< -serial file:/dev/stdout
