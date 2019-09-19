@@ -2,7 +2,6 @@ export ARCH=i686
 export AR=$(ARCH)-elf-ar
 export AS=$(ARCH)-elf-as
 export CC=$(CLANG) $(CLANGFLAGS)
-export CFLAGS+=-nostdinc 
 export CLANG=clang
 export CLANGXX=clang++
 export CLANGFLAGS=--target=$(TARGET) -march=$(ARCH)
