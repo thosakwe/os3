@@ -6,7 +6,7 @@ export CLANGXX=clang++
 export CLANGFLAGS=--target=$(TARGET) -march=$(ARCH)
 export CXX=$(CLANGXX) $(CLANGFLAGS)
 export CXXFLAGS+=-ffreestanding -fno-builtin -nostdlib \
-	-nostdinc -nostdinc++
+	-nostdinc -nostdinc++ -fno-rtti
 export LD=$(ARCH)-elf-ld
 export TARGET=$(ARCH)-pc-none-elf
 
@@ -21,3 +21,9 @@ clean:
 
 src/kernel.bin:
 	$(MAKE) -C src
+	grub-file --is-x86-multiboot $@
+
+.iso/boot/kernel.bin: src/kernel.bin
+	mkdir -p .iso/boot
+	cp -rp iso/ ./iso
+	cp $< $@
