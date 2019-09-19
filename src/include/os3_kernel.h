@@ -4,7 +4,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "liballoc_1_1.h"
+#include "process.h"
 #define COM1 0x3F8
+
+typedef struct {
+  os3_process_t* processes;
+} os3_t;
 
 void os3_setup_gdt();
 void os3_setup_idt();
