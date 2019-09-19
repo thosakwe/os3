@@ -15,7 +15,7 @@ typedef enum {
 } os3_fd_type_t;
 
 typedef struct _os3_blob {
-  unsigned int size;
+  unsigned int size, foreign_pid;
   uint8_t* data;
   struct _os3_blob* next;
 } os3_blob_t;
