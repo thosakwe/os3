@@ -70,6 +70,7 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+extern void isr128();
 extern void irq0();
 extern void irq1();
 extern void irq2();
@@ -142,11 +143,6 @@ void os3_setup_idt() {
   outb(PIC1 + 1, 0xff);
   outb(PIC1 + 2, 0xff);
 
-  // Next, enable the interrupts we have set up.
-  for (int i = 0; i < used_entries; i++) {
-    irq_enable(i);
-  }
-
   // IDT time.
   kmemset(&idt_entries, 0, sizeof(idt_entries));
   idt_descriptor.size = sizeof(idt_entries) - 1;
@@ -199,6 +195,16 @@ void os3_setup_idt() {
   DECLARE_IRQ(13);
   DECLARE_IRQ(14);
   DECLARE_IRQ(15);
+
+  // Next, enable the interrupts we have set up.
+  for (int i = 0; i < used_entries; i++) {
+    irq_enable(i);
+  }
+
+	// Enable syscall 0x80.
+	DECLARE_ISR(128);
+	irq_enable(128);
+
   // This is CRITICAL: Align the pointer on 16 bits.
   // I spent several hours hunting this down.
   idt_descriptor.offset = (uint32_t)&idt_entries;

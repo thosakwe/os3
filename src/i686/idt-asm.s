@@ -73,7 +73,7 @@ isr 29
 isr 30
 isr 31
 isr 32
-isr 48 # Syscall interrupt
+isr 128 # Syscall interrupt
 
 irq 0
 irq 1
