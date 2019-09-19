@@ -8,9 +8,10 @@ export CXX=$(CLANGXX) $(CLANGFLAGS)
 export CXXFLAGS+=-ffreestanding -fno-builtin -nostdlib \
 	-nostdinc -nostdinc++ -fno-rtti
 export LD=$(ARCH)-elf-ld
+export QEMU=qemu-system-i386
 export TARGET=$(ARCH)-pc-none-elf
 
-.PHONY: all clean src/kernel.bin
+.PHONY: all clean src/kernel.bin run-qemu
 
 all: os3.iso
 
@@ -30,3 +31,6 @@ src/kernel.bin:
 
 os3.iso: .iso/boot/kernel.bin
 	grub-mkrescue -o $@ .iso/
+
+run-qemu: os3.iso
+	$(QEMU) -cdrom $<
