@@ -14,6 +14,9 @@ os3_process_t* os3_new_process(os3_t* os3) {
     }
     cur->next = p;
   }
+  p->argc = 0;
+  p->argv = NULL;
+  p->entry_point = NULL;
   p->exit_code = -1;
   p->file_descriptors = NULL;
   p->id = id + 1;
@@ -24,3 +27,4 @@ os3_process_t* os3_new_process(os3_t* os3) {
   p->stderr = os3_new_fd_std(p);
   return p;
 }
+

@@ -15,6 +15,7 @@ os3_fd_t* os3_new_fd_std(os3_process_t* process) {
 		cur->next = p;
 	}
 	p->id = id + 1;
+	p->is_closed = false;
 	p->incoming = p->outgoing = NULL;
 	p->next = NULL;
 	p->type = OS3_FD_STD_STREAM;

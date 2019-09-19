@@ -39,6 +39,7 @@ void os3_setup_gdt();
 void os3_setup_idt();
 void os3_setup_paging();
 os3_process_t* os3_new_process(os3_t* os3);
+int os3_enter_process(os3_t* os3, os3_process_t* proc);
 void os3_destroy_process(os3_t* os3, os3_process_t process);
 os3_fd_t* os3_new_fd_std(os3_process_t* process);
 os3_fd_t* os3_new_fd_ipc(os3_process_t* process, unsigned int foreign_pid);

@@ -1,10 +1,19 @@
 #include <os3_kernel.h>
+#define ISR_INVALID_TSS 0xa
 #define ISR_GENERAL_PROTECTION_FAULT 0xd
 
 void interrupt_handler(os3_interrupt_t *ctx) {
   // asm volatile("cli");
+  // Acknowledge the PIC; send EOI
+  outb(0x20, 0x20);
   if (ctx->number < 32) {
     switch (ctx->number) {
+      case ISR_INVALID_TSS: {
+	uint32_t selector_index = ctx->error_code;
+	kwrites("Invalid TSS. Selector index: 0x");
+	kputi_r(selector_index, 16);
+	kputc('\n');
+      } break;
       case ISR_GENERAL_PROTECTION_FAULT: {
 	// We hit a page fault.
 	// No big deal, we can handle it.
@@ -28,7 +37,6 @@ void interrupt_handler(os3_interrupt_t *ctx) {
       } break;
     }
     // Acknowledge the PIC; send EOI
-    outb(0x20, 0x20);
     if (irq_no >= 8) outb(0xa0, 0x20);
   } else {
     kwrites("Got unsupported interrupt: ");

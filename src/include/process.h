@@ -9,6 +9,9 @@ typedef struct _os3_process {
   bool is_kernel_module;
   struct _os3_process* next;
   os3_fd_t *file_descriptors, *stdin, *stdout, *stderr;
+	void* entry_point;
+	int argc;
+	char **argv;
 } os3_process_t;
 
 #endif
