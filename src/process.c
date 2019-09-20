@@ -17,10 +17,12 @@ os3_process_t* os3_new_process(os3_t* os3) {
   p->argc = 0;
   p->argv = NULL;
   p->entry_point = NULL;
+  p->entry_point_size = 0;
   p->exit_code = -1;
   p->file_descriptors = NULL;
   p->id = id + 1;
   p->is_kernel_module = false;
+  p->memory_start = NULL;
   p->page_table_index = 0;  // TODO: Page table index
   p->stdin = os3_new_fd_std(p);
   p->stdout = os3_new_fd_std(p);
