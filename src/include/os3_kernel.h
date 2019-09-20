@@ -30,6 +30,7 @@ typedef struct {
 
 void interrupt_handler(os3_interrupt_t *ctx);
 void handle_general_protection_fault(os3_interrupt_t *ctx);
+void *get_page_fault_pointer();
 
 typedef struct _os3 {
   os3_process_t* processes;

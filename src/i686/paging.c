@@ -9,11 +9,13 @@ os3_page_table_t page_tables[PAGE_DIRECTORY_SIZE]
 bool used_dirs[PAGE_DIRECTORY_SIZE];
 bool used_pages[PAGE_TABLE_SIZE];
 uint64_t _ram_end;
+uint32_t id_map_page_count;
 
 int16_t next_page_directory() {
-  for (int16_t i = 0; i < (sizeof(used_dirs) / sizeof(bool)); i++) {
-    if (!used_dirs[i]) {
+  for (int16_t i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
+    if (!(used_dirs[i])) {
       used_dirs[i] = true;
+      page_directory[i] |= PAGE_MASK_PRESENT;
       return i;
     }
   }
@@ -22,7 +24,34 @@ int16_t next_page_directory() {
 
 void release_page_directory(int16_t n) {
   // TODO: Mark page directory as unused.
+  page_directory[n] &= ~PAGE_MASK_PRESENT;
   used_dirs[n] = false;
+}
+
+void os3_disable_kernel_pages() {
+  for (uint32_t i = 0; i < id_map_page_count; i++) {
+    page_directory[i] &= (~PAGE_MASK_PRESENT);
+  }
+}
+
+void os3_init_page_directory(uint32_t *pd, os3_page_table_t *pt, uint32_t rs,
+			     bool *ud) {
+  // First, set up our page directory. Every entry should point to
+  // a page table.
+  for (uint16_t i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
+    os3_page_table_t *table = &pt[i];
+    uint32_t table_addr = (uint32_t)table;
+    pd[i] = table_addr & PAGE_MASK_EMPTY;
+    // if (ud != NULL) ud[i] = true;
+
+    // While we loop, also initialize each page table.
+    for (uint16_t j = 0; j < PAGE_TABLE_SIZE; j++) {
+      // Each page points to a 4KB offset from ram_start.
+      multiboot_uint64_t addr = rs + (PAGE_SIZE * j);
+      // uint32_t addr = ram_start + (PAGE_SIZE * j);
+      table->pages[j] = addr & PAGE_MASK_EMPTY;
+    }
+  }
 }
 
 void os3_setup_paging(uint32_t ram_start, uint32_t ram_end) {
@@ -36,20 +65,7 @@ void os3_setup_paging(uint32_t ram_start, uint32_t ram_end) {
 
   // First, set up our page directory. Every entry should point to
   // a page table.
-  for (uint16_t i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
-    os3_page_table_t *table = &page_tables[i];
-    uint32_t table_addr = (uint32_t)table;
-    page_directory[i] = table_addr & PAGE_MASK_EMPTY;
-    used_dirs[i] = true;
-
-    // While we loop, also initialize each page table.
-    for (uint16_t j = 0; j < PAGE_TABLE_SIZE; j++) {
-      // Each page points to a 4KB offset from ram_start.
-      multiboot_uint64_t addr = ram_start + (PAGE_SIZE * j);
-      // uint32_t addr = ram_start + (PAGE_SIZE * j);
-      table->pages[0] = addr & PAGE_MASK_EMPTY;
-    }
-  }
+  os3_init_page_directory(page_directory, page_tables, ram_start, used_dirs);
 
   // Next, identity map the kernel.
   // Simply put: We simply set (present) on pages in the first
@@ -78,6 +94,7 @@ void os3_setup_paging(uint32_t ram_start, uint32_t ram_end) {
     }
     pde_index++;
   }
+  id_map_page_count = pde_index;
 
   // Next, load the page directory, and enable paging.
   // kwrites("Page directory offset: 0x");
@@ -92,8 +109,8 @@ int liballoc_lock() { return 0; }
 int liballoc_unlock() { return 0; }
 
 void *liballoc_alloc(size_t n) {
-  const int num_pages = (sizeof(used_pages) / sizeof(bool));
-  const int min_page = (((unsigned int)_ram_end) / PAGE_SIZE) + 1;
+  const int num_pages = PAGE_TABLE_SIZE;
+  const int min_page = (((unsigned int)&endkernel) / PAGE_SIZE) + 1;
   // TODO: This can be made faster, but do I really care atm
   for (int i = min_page; i < num_pages - n; i++) {
     bool matched = true;

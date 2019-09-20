@@ -3,44 +3,47 @@
 #define ISR_GENERAL_PROTECTION_FAULT 0xd
 #define ISR_PAGE_FAULT 0xe
 
-void interrupt_handler(os3_interrupt_t *ctx) {
+void interrupt_handler(os3_interrupt_t* ctx) {
   // asm volatile("cli");
   // Acknowledge the PIC; send EOI
   outb(0x20, 0x20);
   if (ctx->number < 32) {
     switch (ctx->number) {
       case ISR_GENERAL_PROTECTION_FAULT: {
-        // We hit a page fault.
-        // No big deal, we can handle it.
-        handle_general_protection_fault(ctx);
+	// We hit a page fault.
+	// No big deal, we can handle it.
+	handle_general_protection_fault(ctx);
       } break;
       case ISR_PAGE_FAULT: {
-        uint8_t info = ctx->error_code;
-        kwrites("Page fault. Info: 0b");
-        kputi_r(info, 2);
-        kputc('\n');
+	uint8_t info = ctx->error_code;
+	void* ptr = get_page_fault_pointer();
+	kwrites("Page fault on pointer: 0x");
+	kputi_r((uint32_t)ptr, 16);
+	kwrites(". Info: 0b");
+	kputi_r(info, 2);
+	kputc('\n');
       } break;
       default: {
-        kwrites("Unhandled ISR interrupt: ");
-        kputi(ctx->number);
-        kwrites("; error code=");
-        kputi(ctx->error_code);
-        kputc('\n');
+	kwrites("Unhandled ISR interrupt: ");
+	kputi(ctx->number);
+	kwrites("; error code=");
+	kputi(ctx->error_code);
+	kputc('\n');
       } break;
     }
   } else if (ctx->number >= 32 && ctx->number <= 48) {
     uint32_t irq_no = ctx->number - 32;
     switch (irq_no) {
       case IRQ_INVALID_TSS: {
-        uint32_t selector_index = ctx->error_code;
-        kwrites("Invalid TSS. Selector index: 0x");
-        kputi_r(selector_index, 16);
-        kputc('\n');
+	uint32_t selector_index = ctx->error_code;
+	kwrites("Invalid TSS. Selector index: 0x");
+	kputi_r(selector_index, 16);
+	kputc('\n');
       } break;
       default: {
-        kwrites("Unhandled IRQ interrupt: ");
-        kputi(irq_no);
-        kputc('\n');
+	kwrites("Unhandled IRQ interrupt: ");
+	kputi(irq_no);
+	kputc('\n');
       } break;
     }
     // Acknowledge the PIC; send EOI
@@ -53,11 +56,10 @@ void interrupt_handler(os3_interrupt_t *ctx) {
   // asm volatile("sti");
 }
 
-void handle_general_protection_fault(os3_interrupt_t *ctx) {
+void handle_general_protection_fault(os3_interrupt_t* ctx) {
   // If the page requested was not present, then cr2 will
   // specify the faulty address.
-  // void *ptr = 0;
-  // asm("mov %%cr2, %0" : "=g"(ptr));
+  void* ptr = get_page_fault_pointer();
   kwrites("GPF on pointer: 0x");
   // kputi_r((unsigned int)ptr, 16);
   kputc('\n');

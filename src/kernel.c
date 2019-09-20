@@ -1,9 +1,7 @@
 #include <multiboot2.h>
 #include <os3_kernel.h>
 
-void userspace_demo() {
-  asm("int $0x80");
-}
+void userspace_demo() { asm("int $0x80"); }
 
 void kernel_main(unsigned long magic, void *addr) {
   if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
@@ -76,8 +74,12 @@ void kernel_main(unsigned long magic, void *addr) {
   }
 
   // Create a simple process.
-  os3_process_t* proc = os3_new_process(&os3);
+  os3_process_t *proc = os3_new_process(&os3);
   proc->entry_point = userspace_demo;
-  os3_enter_process(&os3, proc);
-  kputs("...!");
+  proc->entry_point_size = sizeof(userspace_demo);
+  if (!os3_enter_process(&os3, proc)) {
+    kputs("process enter failed.");
+  } else {
+    kputs("wtf");
+  }
 }

@@ -1,5 +1,6 @@
 #ifndef OS3_I686_PAGING_H
 #define OS3_I686_PAGING_H
+#include <stdbool.h>
 #include <stdint.h>
 #define PAGE_DIRECTORY_SIZE 1024
 #define PAGE_TABLE_SIZE PAGE_DIRECTORY_SIZE
@@ -22,9 +23,12 @@ extern uint32_t page_directory[PAGE_DIRECTORY_SIZE]
     __attribute__((aligned(4096)));
 extern os3_page_table_t page_tables[PAGE_DIRECTORY_SIZE]
     __attribute__((aligned(4096)));
-
+extern uint32_t id_map_page_count;
 extern void os3_enable_paging(uint32_t *pdir);
+void os3_disable_kernel_pages();
 int16_t next_page_directory();
 void release_page_directory(int16_t);
+void os3_init_page_directory(uint32_t *pd, os3_page_table_t *pt,
+			     uint32_t ram_start, bool *used_dirs);
 
 #endif

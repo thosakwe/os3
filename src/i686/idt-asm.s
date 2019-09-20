@@ -30,6 +30,13 @@
 	.size irq\no, . - irq\no
 .endm
 
+.global get_page_fault_pointer
+.type get_page_fault_pointer, @function
+get_page_fault_pointer:
+	mov %cr2, %eax
+	ret
+.size get_page_fault_pointer, . - get_page_fault_pointer
+
 .global os3_flush_idt
 .type os3_flush_idt, @function
 os3_flush_idt:

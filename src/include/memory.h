@@ -12,7 +12,7 @@ typedef enum {
 
 typedef struct _os3_memory_region {
   bool used;
-  size_t length;
+  size_t offset, length;
 	os3_memory_access_t access;
   struct _os3_memory_region *next, *prev;
 } os3_memory_region_t;
@@ -22,6 +22,7 @@ static inline void os3_memory_region_init(os3_memory_region_t* p) {
 	p->used = false;
 	p->access = OS3_MEMORY_READABLE;
 	p->next = p->prev = NULL;
+	p->offset = p->length = 0;
 }
 
 #endif
