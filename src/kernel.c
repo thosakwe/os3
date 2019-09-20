@@ -1,6 +1,10 @@
 #include <multiboot2.h>
 #include <os3_kernel.h>
 
+void userspace_demo() {
+  asm("int $0x80");
+}
+
 void kernel_main(unsigned long magic, void *addr) {
   if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
     kputs("Invalid magic given; not Multiboot2. Aborting.");
@@ -10,6 +14,7 @@ void kernel_main(unsigned long magic, void *addr) {
   uint32_t ram_start = 0x0, ram_end = (uint32_t)&endkernel;
   os3_t os3;
   os3.processes = NULL;
+  kcls();
 
   // Read the Multiboot2 header, in order to find modules.
   struct multiboot_tag *tag = addr + 8;  // Skip size, AND reserved u32 field.
@@ -51,8 +56,8 @@ void kernel_main(unsigned long magic, void *addr) {
       case MULTIBOOT_TAG_TYPE_CMDLINE: {
         struct multiboot_tag_string *cmdline =
             (struct multiboot_tag_string *)tag;
-        kwrites("Boot command line: ");
-        kputs(cmdline->string);
+        // TODO: Save the command line?
+        // kputs(cmdline->string);
       } break;
       case MULTIBOOT_TAG_TYPE_MODULE: {
         struct multiboot_tag_module *module =
@@ -71,8 +76,8 @@ void kernel_main(unsigned long magic, void *addr) {
   }
 
   // Create a simple process.
-  // os3_process_t* proc = os3_new_process(&os3);
-  // proc->entry_point = userspace_demo;
-  // os3_enter_process(&os3, proc);
-  // kputs("...!");
+  os3_process_t* proc = os3_new_process(&os3);
+  proc->entry_point = userspace_demo;
+  os3_enter_process(&os3, proc);
+  kputs("...!");
 }

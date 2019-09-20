@@ -1,33 +1,35 @@
 #include <multiboot2.h>
 #include <os3_kernel.h>
-#define PAGE_DIRECTORY_SIZE 1024
-#define PAGE_TABLE_SIZE PAGE_DIRECTORY_SIZE
-#define PAGE_SIZE 4096
-#define BYTES_IN_PAGE_TABLE (PAGE_TABLE_SIZE * PAGE_SIZE)
-#define PAGE_MASK_EMPTY 0xfffff000
-#define PAGE_MASK_PRESENT 0x1
-#define PAGE_MASK_READ_WRITE 0x2
-#define PAGE_MASK_RING0 0x0
-#define PAGE_MASK_RING3 0x4
-#define SIZE_1MB (1024 * 1024)
-#define SIZE_1GB (SIZE_1MB * 1024)
-#define SIZE_4GB ((uint64_t)SIZE_1GB * 4)
-
-typedef struct _os3_page_table {
-  uint32_t pages[PAGE_TABLE_SIZE] __attribute__((aligned(4096)));
-} __attribute__((packed)) os3_page_table_t;
+#include "paging.h"
 
 uint32_t page_directory[PAGE_DIRECTORY_SIZE] __attribute__((aligned(4096)));
 os3_page_table_t page_tables[PAGE_DIRECTORY_SIZE]
     __attribute__((aligned(4096)));
 
-extern void os3_enable_paging(uint32_t *pdir);
-
+bool used_dirs[PAGE_DIRECTORY_SIZE];
 bool used_pages[PAGE_TABLE_SIZE];
 uint64_t _ram_end;
 
+int16_t next_page_directory() {
+	for (int16_t i = 0; i < (sizeof(used_dirs)/sizeof(bool)); i++) {
+		if (!used_dirs[i]) {
+			used_dirs[i] = true;
+			return i;
+		}
+	}
+	return -1;
+}
+
+void release_page_directory(int16_t n) {
+	// TODO: Mark page directory as unused.
+	used_dirs[n] = false;
+}
+
 void os3_setup_paging(uint32_t ram_start, uint32_t ram_end) {
   // Init used_pages.
+  for (int i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
+    used_dirs[i] = false;
+  }
   for (int i = 0; i < PAGE_TABLE_SIZE; i++) {
     used_pages[i] = false;
   }
@@ -38,6 +40,7 @@ void os3_setup_paging(uint32_t ram_start, uint32_t ram_end) {
     os3_page_table_t *table = &page_tables[i];
     uint32_t table_addr = (uint32_t)table;
     page_directory[i] = (table_addr)&PAGE_MASK_EMPTY;
+		used_dirs[i] = true;
 
     // While we loop, also initialize each page table.
     for (uint16_t j = 0; j < PAGE_TABLE_SIZE; j++) {
@@ -63,6 +66,7 @@ void os3_setup_paging(uint32_t ram_start, uint32_t ram_end) {
   uint64_t identity_map_count = end;
   while (offset < identity_map_count && pde_index < PAGE_DIRECTORY_SIZE) {
     page_directory[pde_index] |= PAGE_MASK_PRESENT | PAGE_MASK_READ_WRITE;
+		used_dirs[pde_index] = true;
 
     for (int i = 0; i < PAGE_DIRECTORY_SIZE && offset < identity_map_count;
 	 i++) {

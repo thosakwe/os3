@@ -36,11 +36,11 @@ src/kernel.bin:
 	$(MAKE) -C src
 	grub-file --is-x86-multiboot2 $@
 
-.isodir/boot/kernel.bin: src/kernel.bin modules
+.isodir/boot/kernel.bin: src/kernel.bin
 	mkdir -p .isodir/boot
 	mkdir -p .isodir/modules
 	cp -rp iso/ .isodir/
-	cp modules/*.mod .isodir/modules
+	# cp modules/*.mod .isodir/modules
 	cp $< $@
 
 os3.iso: .isodir/boot/kernel.bin
