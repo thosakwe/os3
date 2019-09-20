@@ -14,7 +14,7 @@ export LIBARCH=lib$(ARCH).a
 export QEMU=qemu-system-i386
 export TARGET=$(ARCH)-pc-none-elf
 
-.PHONY: all bochs clean src/kernel.bin run-qemu
+.PHONY: all bochs clean modules src/kernel.bin run-qemu
 
 all: os3.iso
 
@@ -29,13 +29,18 @@ clean:
 		-o -name '*.bin' -o -name '*.iso' \) \
 		-delete
 
+modules:
+	$(MAKE) -C modules
+
 src/kernel.bin:
 	$(MAKE) -C src
 	grub-file --is-x86-multiboot2 $@
 
-.isodir/boot/kernel.bin: src/kernel.bin
+.isodir/boot/kernel.bin: src/kernel.bin modules
 	mkdir -p .isodir/boot
+	mkdir -p .isodir/modules
 	cp -rp iso/ .isodir/
+	cp modules/*.mod .isodir/modules
 	cp $< $@
 
 os3.iso: .isodir/boot/kernel.bin
