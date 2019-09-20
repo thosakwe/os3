@@ -67,6 +67,8 @@ void kernel_main(unsigned long magic, void *addr) {
         kwrites("); cmdline=");
         kputs(module->cmdline);
       } break;
+      case MULTIBOOT_TAG_TYPE_BOOTDEV: {
+      } break;
     }
     // Jump to the next one.
     tag = (struct multiboot_tag *)((multiboot_uint8_t *)tag +
@@ -74,12 +76,14 @@ void kernel_main(unsigned long magic, void *addr) {
   }
 
   // Create a simple process.
-  os3_process_t *proc = os3_new_process(&os3);
-  proc->entry_point = userspace_demo;
-  proc->entry_point_size = sizeof(userspace_demo);
-  if (!os3_enter_process(&os3, proc)) {
-    kputs("process enter failed.");
-  } else {
-    kputs("wtf");
-  }
+  // os3_process_t *proc = os3_new_process(&os3);
+  // proc->entry_point = userspace_demo;
+  // // There's no way in C to do sizeof(userspace_demo), so
+  // // We just guess a size for the demo.
+  // proc->entry_point_size = 0x8000;
+  // if (!os3_enter_process(&os3, proc)) {
+  //   kputs("process enter failed.");
+  // } else {
+  //   kputs("wtf");
+  // }
 }

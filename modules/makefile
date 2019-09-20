@@ -1,4 +1,1 @@
-all: hello.mod
-
-%.mod: %.o
-	$(LD) -o $@ -r $^
+all: int80.o

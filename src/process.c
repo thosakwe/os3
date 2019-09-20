@@ -24,6 +24,10 @@ os3_process_t* os3_new_process(os3_t* os3) {
   p->is_kernel_module = false;
   p->memory_start = NULL;
   p->page_table_index = 0;  // TODO: Page table index
+  p->page_directory =
+      (uint32_t*)kmalloc(sizeof(uint32_t) * PAGE_DIRECTORY_SIZE);
+  p->page_tables =
+      (os3_page_table_t*)kmalloc(sizeof(os3_page_table_t) * PAGE_TABLE_SIZE);
   p->stdin = os3_new_fd_std(p);
   p->stdout = os3_new_fd_std(p);
   p->stderr = os3_new_fd_std(p);

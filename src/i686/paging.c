@@ -1,4 +1,3 @@
-#include "paging.h"
 #include <multiboot2.h>
 #include <os3_kernel.h>
 
@@ -28,6 +27,11 @@ void release_page_directory(int16_t n) {
   used_dirs[n] = false;
 }
 
+void os3_enable_kernel_pages() {
+  for (uint32_t i = 0; i < id_map_page_count; i++) {
+    page_directory[i] |= PAGE_MASK_PRESENT;
+  }
+}
 void os3_disable_kernel_pages() {
   for (uint32_t i = 0; i < id_map_page_count; i++) {
     page_directory[i] &= (~PAGE_MASK_PRESENT);

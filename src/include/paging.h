@@ -25,6 +25,7 @@ extern os3_page_table_t page_tables[PAGE_DIRECTORY_SIZE]
     __attribute__((aligned(4096)));
 extern uint32_t id_map_page_count;
 extern void os3_enable_paging(uint32_t *pdir);
+void os3_enable_kernel_pages();
 void os3_disable_kernel_pages();
 int16_t next_page_directory();
 void release_page_directory(int16_t);

@@ -28,6 +28,7 @@ clean:
 	find . \( -name '*.o' -o -name '*.a' \
 		-o -name '*.bin' -o -name '*.iso' \) \
 		-delete
+	rm -rf .isodir .iso
 
 modules:
 	$(MAKE) -C modules
@@ -36,11 +37,11 @@ src/kernel.bin:
 	$(MAKE) -C src
 	grub-file --is-x86-multiboot2 $@
 
-.isodir/boot/kernel.bin: src/kernel.bin
+.isodir/boot/kernel.bin: src/kernel.bin modules
 	mkdir -p .isodir/boot
 	mkdir -p .isodir/modules
 	cp -rp iso/ .isodir/
-	# cp modules/*.mod .isodir/modules
+	cp modules/* .isodir/modules
 	cp $< $@
 
 os3.iso: .isodir/boot/kernel.bin
