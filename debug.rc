@@ -1,4 +1,4 @@
 # vim: ft=conf
-b 0x10401f # usermode_jump
-b 0x103e70 # os3_enter_process
+# b 0x10401f # usermode_jump
+# b 0x103e70 # os3_enter_process
 c

@@ -18,7 +18,7 @@ export TARGET=$(ARCH)-pc-none-elf
 
 all: os3.iso
 
-debug: CFLAGS+= -g -DOS3_DEBUG=1
+debug: CFLAGS+= -gdwarf-2 -g3 -DOS3_DEBUG=1
 debug: all
 
 bochs: debug

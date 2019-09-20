@@ -20,7 +20,7 @@ typedef struct {
   uint32_t edx;
   uint32_t ecx;
   uint32_t eax;
-  uint32_t number; // The interrupt number, i.e. 0x80
+  uint32_t number;  // The interrupt number, i.e. 0x80
   uint32_t error_code;
   uint32_t cs;
   uint32_t eflags;
@@ -28,9 +28,10 @@ typedef struct {
   uint32_t ss;
 } __attribute__((packed)) os3_interrupt_t;
 
-void interrupt_handler(os3_interrupt_t *ctx);
-void handle_general_protection_fault(os3_interrupt_t *ctx);
-void *get_page_fault_pointer();
+void interrupt_handler(os3_interrupt_t* ctx);
+void handle_general_protection_fault(os3_interrupt_t* ctx);
+void handle_page_fault(os3_interrupt_t* ctx);
+void* get_page_fault_pointer();
 
 typedef struct _os3 {
   os3_process_t* processes;
@@ -69,7 +70,7 @@ void kputi(int val);
 void kputi_r(int val, int base);
 
 void kmemset(void* ptr, uint8_t value, size_t size);
-void kmemcpy(void *dst, void *src, unsigned long size);
+void kmemcpy(void* dst, void* src, unsigned long size);
 
 /**
  * Finds the length of a string that is KNOWN to be <= 65535 characters long.
@@ -93,5 +94,11 @@ static inline uint8_t inb(uint16_t port) {
 }
 
 static inline void interrupt(uint8_t no) { asm volatile("int $%0" ::"Nd"(no)); }
+
+static inline void hang() {
+  while (true) {
+    continue;
+  }
+}
 
 #endif

@@ -5,15 +5,15 @@ uint32_t page_directory[PAGE_DIRECTORY_SIZE] __attribute__((aligned(4096)));
 os3_page_table_t page_tables[PAGE_DIRECTORY_SIZE]
     __attribute__((aligned(4096)));
 
-bool used_dirs[PAGE_DIRECTORY_SIZE];
-bool used_pages[PAGE_TABLE_SIZE];
+// bool used_dirs[PAGE_DIRECTORY_SIZE];
 uint64_t _ram_end;
 uint32_t id_map_page_count;
 
 int16_t next_page_directory() {
   for (int16_t i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
-    if (!(used_dirs[i])) {
-      used_dirs[i] = true;
+		if (!page_is_present(page_directory[i])) {
+      // if (!(used_dirs[i])) {
+      // used_dirs[i] = true;
       page_directory[i] |= PAGE_MASK_PRESENT;
       return i;
     }
@@ -24,7 +24,7 @@ int16_t next_page_directory() {
 void release_page_directory(int16_t n) {
   // TODO: Mark page directory as unused.
   page_directory[n] &= ~PAGE_MASK_PRESENT;
-  used_dirs[n] = false;
+  // used_dirs[n] = false;
 }
 
 void os3_enable_kernel_pages() {
@@ -38,8 +38,7 @@ void os3_disable_kernel_pages() {
   }
 }
 
-void os3_init_page_directory(uint32_t *pd, os3_page_table_t *pt, uint32_t rs,
-			     bool *ud) {
+void os3_init_page_directory(uint32_t *pd, os3_page_table_t *pt, uint32_t rs) {
   // First, set up our page directory. Every entry should point to
   // a page table.
   for (uint16_t i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
@@ -60,16 +59,16 @@ void os3_init_page_directory(uint32_t *pd, os3_page_table_t *pt, uint32_t rs,
 
 void os3_setup_paging(uint32_t ram_start, uint32_t ram_end) {
   // Init used_pages.
-  for (int i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
-    used_dirs[i] = false;
-  }
-  for (int i = 0; i < PAGE_TABLE_SIZE; i++) {
-    used_pages[i] = false;
-  }
+  // for (int i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
+  //   used_dirs[i] = false;
+  // }
+  // for (int i = 0; i < PAGE_TABLE_SIZE; i++) {
+  //   used_pages[i] = false;
+  // }
 
   // First, set up our page directory. Every entry should point to
   // a page table.
-  os3_init_page_directory(page_directory, page_tables, ram_start, used_dirs);
+  os3_init_page_directory(page_directory, page_tables, ram_start);
 
   // Next, identity map the kernel.
   // Simply put: We simply set (present) on pages in the first
@@ -79,21 +78,28 @@ void os3_setup_paging(uint32_t ram_start, uint32_t ram_end) {
   // is 1:1 mapped to itself.
   // uint64_t end = (uint64_t)&endkernel;
   uint64_t end = ram_end;
-  end = (uint64_t)endkernel;
+  // end = (uint64_t)endkernel;
   _ram_end = end;
   uint64_t offset = 0;
   uint32_t pde_index = 0;
   uint64_t identity_map_count = end;
+  uint64_t endk = (uint64_t)&endkernel;
   while (offset < identity_map_count && pde_index < PAGE_DIRECTORY_SIZE) {
+    // Should everything be ring3-able?
     page_directory[pde_index] |=
-	PAGE_MASK_RING0 | PAGE_MASK_PRESENT | PAGE_MASK_READ_WRITE;
-    used_dirs[pde_index] = true;
+        PAGE_MASK_RING3 | PAGE_MASK_PRESENT | PAGE_MASK_READ_WRITE;
 
-    for (int i = 0; i < PAGE_DIRECTORY_SIZE && offset < identity_map_count;
-	 i++) {
-      used_pages[i] = true;
+    // Though we are marking everything present, don't mark any as USED if it's
+    // not actually used. Otherwise, there will be no successful kmalloc calls,
+    // ever.
+    // if (offset <= endk) {
+    //   used_dirs[pde_index] = true;
+    // }
+
+    for (int i = 0; i < PAGE_TABLE_SIZE && offset < identity_map_count; i++) {
+      // used_pages[i] = true;
       uint32_t value = page_tables[pde_index].pages[i] =
-	  offset | PAGE_MASK_PRESENT | PAGE_MASK_READ_WRITE;
+          offset | PAGE_MASK_PRESENT | PAGE_MASK_READ_WRITE;
       offset += PAGE_SIZE;
     }
     pde_index++;
@@ -113,22 +119,36 @@ int liballoc_lock() { return 0; }
 int liballoc_unlock() { return 0; }
 
 void *liballoc_alloc(size_t n) {
-  const int num_pages = PAGE_TABLE_SIZE;
-  const int min_page = (((unsigned int)&endkernel) / PAGE_SIZE) + 1;
-  // TODO: This can be made faster, but do I really care atm
-  for (int i = min_page; i < num_pages - n; i++) {
+  // TODO: This is potentially very slow.
+  // Skip the ID-mapped region.
+  uint16_t min_page = (_ram_end / PAGE_SIZE) + 1;
+  for (uint16_t i = min_page; i < TOTAL_PAGE_COUNT - n; i++) {
     bool matched = true;
-    for (int j = i; j < i + n; j++) {
-      if (used_pages[j]) {
-	matched = false;
-	break;
+    for (size_t j = 0; (j < n) && matched; j++) {
+      uint16_t page_index = i + j;
+      uint16_t pde_index = page_index / PAGE_DIRECTORY_SIZE;
+      uint16_t pt_index = page_index % PAGE_DIRECTORY_SIZE;
+      // If the directory is not present, then the page is not present.
+      if (!page_is_present(page_directory[pde_index])) {
+        continue;
+      }
+      // Otherwise, check if the page is present.
+      uint32_t page = page_tables[pde_index].pages[pt_index];
+      if ((page & PAGE_MASK_PRESENT) == PAGE_MASK_PRESENT) {
+        matched = false;
+        break;
       }
     }
     if (matched) {
-      for (int j = i; j < i + n; j++) {
-	// Mark pages as present.
-	page_directory[j] |= PAGE_MASK_PRESENT;
-	used_pages[j] = true;
+      // Set all dirs and entries present.
+      for (size_t j = 0; (j < n) && matched; j++) {
+        uint16_t page_index = i + j;
+        uint16_t pde_index = page_index / PAGE_DIRECTORY_SIZE;
+        uint16_t pt_index = page_index % PAGE_DIRECTORY_SIZE;
+        // Mark the directory present.
+        page_directory[pde_index] |= PAGE_MASK_PRESENT;
+        // Mark the page present.
+        page_tables[pde_index].pages[pt_index] |= PAGE_MASK_PRESENT;
       }
       return (void *)(i * PAGE_SIZE);
     }
@@ -142,7 +162,7 @@ int liballoc_free(void *ptr, size_t n) {
     // Mark pages as NOT present.
     const int MASK_NOT_PRESENT = ~PAGE_MASK_PRESENT;
     page_directory[j] &= MASK_NOT_PRESENT;
-    used_pages[j] = false;
+    // used_pages[j] = false;
   }
   return 0;
 }

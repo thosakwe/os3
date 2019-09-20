@@ -8,6 +8,8 @@ void kernel_main(unsigned long magic, void *addr) {
   }
 
   uint32_t ram_start = 0x0, ram_end = (uint32_t)&endkernel;
+  // ram_end = 0xffffffff; // Just make the entire address apce available for
+  // kernel.
   os3_t os3;
   os3.processes = NULL;
   kcls();
@@ -23,6 +25,7 @@ void kernel_main(unsigned long magic, void *addr) {
           if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE) {
             // TODO: Handle multiple available RAM.
             ram_start = mmap->addr;
+            // ram_end = ram_start += mmap->len;
           }
           // Jump to the next.
           mmap += mmap_tag->entry_size;
@@ -67,12 +70,16 @@ void kernel_main(unsigned long magic, void *addr) {
 
         // Start a process for each module.
         os3_process_t *proc = os3_new_process(&os3);
-        proc->entry_point = (void *)module->mod_start;
-        proc->entry_point_size = module->mod_end - module->mod_start;
-        if (!os3_enter_process(&os3, proc)) {
-          kputs("process enter failed.");
+        if (proc == NULL) {
+          kputs("process alloc failed.");
         } else {
-          kputs("process success");
+          proc->entry_point = (void *)module->mod_start;
+          proc->entry_point_size = module->mod_end - module->mod_start;
+          if (!os3_enter_process(&os3, proc)) {
+            kputs("process enter failed.");
+          } else {
+            kputs("process success");
+          }
         }
       } break;
       case MULTIBOOT_TAG_TYPE_BOOTDEV: {

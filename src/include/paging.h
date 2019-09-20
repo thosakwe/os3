@@ -4,6 +4,7 @@
 #include <stdint.h>
 #define PAGE_DIRECTORY_SIZE 1024
 #define PAGE_TABLE_SIZE PAGE_DIRECTORY_SIZE
+#define TOTAL_PAGE_COUNT PAGE_DIRECTORY_SIZE * PAGE_TABLE_SIZE
 #define PAGE_SIZE 4096
 #define BYTES_IN_PAGE_TABLE (PAGE_TABLE_SIZE * PAGE_SIZE)
 #define PAGE_MASK_EMPTY 0xfffff000
@@ -30,6 +31,10 @@ void os3_disable_kernel_pages();
 int16_t next_page_directory();
 void release_page_directory(int16_t);
 void os3_init_page_directory(uint32_t *pd, os3_page_table_t *pt,
-			     uint32_t ram_start, bool *used_dirs);
+			     uint32_t ram_start);
+
+static inline bool page_is_present(uint32_t p) {
+	return (p & PAGE_MASK_PRESENT) == PAGE_MASK_PRESENT;
+}
 
 #endif

@@ -10,18 +10,12 @@ void interrupt_handler(os3_interrupt_t* ctx) {
   if (ctx->number < 32) {
     switch (ctx->number) {
       case ISR_GENERAL_PROTECTION_FAULT: {
-	// We hit a page fault.
+	// We hit a GPF fault.
 	// No big deal, we can handle it.
 	handle_general_protection_fault(ctx);
       } break;
       case ISR_PAGE_FAULT: {
-	uint8_t info = ctx->error_code;
-	void* ptr = get_page_fault_pointer();
-	kwrites("Page fault on pointer: 0x");
-	kputi_r((uint32_t)ptr, 16);
-	kwrites(". Info: 0b");
-	kputi_r(info, 2);
-	kputc('\n');
+	handle_page_fault(ctx);
       } break;
       default: {
 	kwrites("Unhandled ISR interrupt: ");
@@ -63,6 +57,33 @@ void handle_general_protection_fault(os3_interrupt_t* ctx) {
   kwrites("GPF on pointer: 0x");
   // kputi_r((unsigned int)ptr, 16);
   kputc('\n');
+}
+
+void handle_page_fault(os3_interrupt_t* ctx) {
+  uint8_t info = ctx->error_code;
+  void* ptr = get_page_fault_pointer();
+  kwrites("Page fault on pointer: 0x");
+  kputi_r((uint32_t)ptr, 16);
+  kwrites(". ");
+  if (info == 0x0) {
+    kputs("Attempt to read non-present page.");
+  } else if (info == 0x2) {
+    kputs("Attempt to write to non-present page.");
+  } else if (info == 0x5) {
+    kputs("Attempt to access ring0 data from ring3.");
+  } else {
+    kwrites("Info: 0b");
+    kputi_r(info, 2);
+    kputc('\n');
+  }
+  hang();
+  // Try to allocate a spare page in a new directory.
+  // TODO: Release this page dir later?
+  // int index = next_page_directory();
+  // if (index == -1) {
+  // 	kputs("Ran out of memory while trying to rectify page fault.");
+  // 	return;
+  // }
 
   // Try to allocate a page.
   // We can compute the address of the necessary page
