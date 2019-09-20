@@ -3,6 +3,7 @@
 .type tss_flush, @function
 // void tss_flush(void* entry_point)
 tss_flush:
+  cli
   movl 4(%esp), %ebx
   # popl %ebx # Store entry point addr in ebx
   mov $0x2b, %ax
@@ -14,7 +15,6 @@ tss_flush:
     # EFLAGS
     # CS
     # EIP
-  cli
   mov $0x23, %ax # Also set RPL to 3 (User data=0x20)
   mov %ax, %ds
   mov %ax, %es
