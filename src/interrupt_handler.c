@@ -1,6 +1,7 @@
 #include <os3_kernel.h>
-#define ISR_INVALID_TSS 0xa
+#define IRQ_INVALID_TSS 0xa
 #define ISR_GENERAL_PROTECTION_FAULT 0xd
+#define ISR_PAGE_FAULT 0xe
 
 void interrupt_handler(os3_interrupt_t *ctx) {
   // asm volatile("cli");
@@ -8,32 +9,38 @@ void interrupt_handler(os3_interrupt_t *ctx) {
   outb(0x20, 0x20);
   if (ctx->number < 32) {
     switch (ctx->number) {
-      case ISR_INVALID_TSS: {
-	uint32_t selector_index = ctx->error_code;
-	kwrites("Invalid TSS. Selector index: 0x");
-	kputi_r(selector_index, 16);
-	kputc('\n');
-      } break;
       case ISR_GENERAL_PROTECTION_FAULT: {
-	// We hit a page fault.
-	// No big deal, we can handle it.
-	handle_general_protection_fault(ctx);
+        // We hit a page fault.
+        // No big deal, we can handle it.
+        handle_general_protection_fault(ctx);
+      } break;
+      case ISR_PAGE_FAULT: {
+        uint8_t info = ctx->error_code;
+        kwrites("Page fault. Info: 0b");
+        kputi_r(info, 2);
+        kputc('\n');
       } break;
       default: {
-	kwrites("Unhandled ISR interrupt: ");
-	kputi(ctx->number);
-	kwrites("; error code=");
-	kputi(ctx->error_code);
-	kputc('\n');
+        kwrites("Unhandled ISR interrupt: ");
+        kputi(ctx->number);
+        kwrites("; error code=");
+        kputi(ctx->error_code);
+        kputc('\n');
       } break;
     }
   } else if (ctx->number >= 32 && ctx->number <= 48) {
     uint32_t irq_no = ctx->number - 32;
     switch (irq_no) {
+      case IRQ_INVALID_TSS: {
+        uint32_t selector_index = ctx->error_code;
+        kwrites("Invalid TSS. Selector index: 0x");
+        kputi_r(selector_index, 16);
+        kputc('\n');
+      } break;
       default: {
-	kwrites("Unhandled IRQ interrupt: ");
-	kputi(irq_no);
-	kputc('\n');
+        kwrites("Unhandled IRQ interrupt: ");
+        kputi(irq_no);
+        kputc('\n');
       } break;
     }
     // Acknowledge the PIC; send EOI

@@ -31,7 +31,7 @@ clean:
 
 src/kernel.bin:
 	$(MAKE) -C src
-	grub-file --is-x86-multiboot $@
+	grub-file --is-x86-multiboot2 $@
 
 .isodir/boot/kernel.bin: src/kernel.bin
 	mkdir -p .isodir/boot

@@ -27,7 +27,14 @@ void os3_setup_gdt() {
   gdt_descriptor.size = sizeof(gdt) - 1;
 
   // TSS Setup.
-  tss.ss0 = 0x13;
+  tss.ss0 = 0x10;
+  tss.esp0 = 0;
+  tss.cs = 0x0b;
+  tss.ss = 0x13;
+  tss.es = 0x13;
+  tss.ds = 0x13;
+  tss.fs = 0x13;
+  tss.gs = 0x13;
 
   // Load it!
   asm("lgdt %0" ::"m"(gdt_descriptor));
