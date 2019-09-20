@@ -1,8 +1,6 @@
 #include <multiboot2.h>
 #include <os3_kernel.h>
 
-void userspace_demo() { asm("int $0x80"); }
-
 void kernel_main(unsigned long magic, void *addr) {
   if (magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
     kputs("Invalid magic given; not Multiboot2. Aborting.");
@@ -60,12 +58,22 @@ void kernel_main(unsigned long magic, void *addr) {
       case MULTIBOOT_TAG_TYPE_MODULE: {
         struct multiboot_tag_module *module =
             (struct multiboot_tag_module *)tag;
-        kwrites("Found module (0x");
-        kputi_r(module->mod_start, 16);
-        kwrites("-0x");
-        kputi_r(module->mod_end, 16);
-        kwrites("); cmdline=");
-        kputs(module->cmdline);
+        // kwrites("Found module (0x");
+        // kputi_r(module->mod_start, 16);
+        // kwrites("-0x");
+        // kputi_r(module->mod_end, 16);
+        // kwrites("); cmdline=");
+        // kputs(module->cmdline);
+
+        // Start a process for each module.
+        os3_process_t *proc = os3_new_process(&os3);
+        proc->entry_point = (void *)module->mod_start;
+        proc->entry_point_size = module->mod_end - module->mod_start;
+        if (!os3_enter_process(&os3, proc)) {
+          kputs("process enter failed.");
+        } else {
+          kputs("process success");
+        }
       } break;
       case MULTIBOOT_TAG_TYPE_BOOTDEV: {
       } break;

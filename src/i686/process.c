@@ -49,7 +49,7 @@ bool os3_enter_process(os3_t* os3, os3_process_t* proc) {
     size += PAGE_SIZE;
   }
   // Disable kernel pages.
-  os3_disable_kernel_pages();
+  // os3_disable_kernel_pages();
   // os3_enable_paging(pd); // This call is unnecessary.
 
   // Next, set up a TSS with an ESP0 stack.
@@ -61,6 +61,7 @@ bool os3_enter_process(os3_t* os3, os3_process_t* proc) {
   // pointer, which in this case is PAGE_SIZE.
   tss_flush();
   usermode_jump(PAGE_SIZE);
+  os3_enable_kernel_pages();
   // TODO: Next, set up an IDT for user interrupts???
   // We only enable a few interrupts, for example, syscall 0x80.
   return true;

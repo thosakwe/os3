@@ -14,7 +14,7 @@ export LIBARCH=lib$(ARCH).a
 export QEMU=qemu-system-i386
 export TARGET=$(ARCH)-pc-none-elf
 
-.PHONY: all bochs clean modules src/kernel.bin run-qemu
+.PHONY: all bochs clean modules src/kernel.bin qemu
 
 all: os3.iso
 
@@ -47,5 +47,6 @@ src/kernel.bin:
 os3.iso: .isodir/boot/kernel.bin
 	grub-mkrescue -o $@ .isodir/
 
-run-qemu: os3.iso
-	$(QEMU) -cdrom $< -serial file:/dev/stdout
+qemu: debug
+	$(QEMU) -cdrom os3.iso -serial file:/dev/stdout -no-reboot \
+		-d int -no-shutdown -s -S
