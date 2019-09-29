@@ -50,3 +50,6 @@ os3.iso: .isodir/boot/kernel.bin
 qemu: debug
 	$(QEMU) -cdrom os3.iso -serial file:/dev/stdout -no-reboot \
 		-d int -no-shutdown -s -S
+
+qemu-no-gdb: debug
+	$(QEMU) -cdrom os3.iso -no-reboot -no-shutdown -serial file:/dev/stdout

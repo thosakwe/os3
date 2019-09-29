@@ -1,7 +1,7 @@
 #include <os3_kernel.h>
 
 os3_process_t* os3_new_process(os3_t* os3) {
-  os3_process_t* p = (os3_process_t*)kmalloc(sizeof(os3_t));
+  os3_process_t* p = (os3_process_t*)kmalloc(sizeof(os3_process_t));
   if (p == NULL) return p;
   unsigned int id = -1;
   if (os3->processes == NULL) {

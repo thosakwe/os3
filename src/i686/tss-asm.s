@@ -1,9 +1,13 @@
 .section .text
 .global tss_flush
 .global usermode_jump
+.global os3_usermode_exit
+.global os3_usermode_exit_end
 .type tss_flush, @function
 .type usermode_jump, @function
-// void tss_flush(void* entry_point)
+.type os3_usermode_exit, @function
+
+# void tss_flush(void* entry_point)
 tss_flush:
   mov $0x2b, %ax
   ltr %ax
@@ -11,7 +15,10 @@ tss_flush:
 .size tss_flush, . - tss_flush
 usermode_jump:
   # movl 4(%esp), %ebx
+  popl %ecx # Store address of usermode_exit
   popl %ebx # Store entry point addr in ebx
+  # Save the kernel stack.
+  mov %esp, (last_kernel_stack)
   # IRET:
     # SS
     # ESP
@@ -35,7 +42,8 @@ usermode_jump:
   # jmp *%ebx
 
   pushl $0x23 # SS (select the same segment as above)
-  pushl %esp # ESP
+  # pushl %esp # ESP
+  pushl %ecx
   pushf # EFLAGS
 
   # Re-enable interrupts after IRET:
@@ -50,3 +58,28 @@ usermode_jump:
   push %ebx # ebx has entry_point, the jump address
   iret
 .size usermode_jump, . - usermode_jump
+
+last_kernel_stack:
+  .long 0
+
+os3_usermode_exit:
+  # When a usermode process exits, return to ring 0.
+  # Set CS_MSR(174h) to our code segment.
+  mov $0x174, %ecx
+  mov $0, %edx
+  mov $0x08, %eax
+  wrmsr
+  # Write ESP_MSR(175h) to our last kernel stack.
+  mov $0x175, %ecx
+  mov $0, %edx
+  mov (last_kernel_stack), %eax
+  wrmsr
+  # Write EIP_EIP(176h) to our sysenter_entry.
+  mov $0x176, %ecx
+  mov $0, %edx
+  mov (os3_sysenter_entry), %eax
+  wrmsr
+  sysenter
+.size os3_usermode_exit, . - os3_usermode_exit
+os3_usermode_exit_end:
+  .byte 0

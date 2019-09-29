@@ -6,6 +6,13 @@ void kcls() {}
 
 void kputc_old(char ch) { outb(COM1, ch); }
 
+void kputptr(const char* label, void* ptr) {
+	kwrites(label);
+	kwrites(": 0x");
+	kputi_r((uint32_t)ptr, 16);
+	kputc('\n');
+}
+
 void kputs(const char *text) {
   kwrites(text);
   kputc('\n');

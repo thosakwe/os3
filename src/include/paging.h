@@ -1,14 +1,16 @@
 #ifndef OS3_I686_PAGING_H
 #define OS3_I686_PAGING_H
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #define PAGE_DIRECTORY_SIZE 1024
 #define PAGE_TABLE_SIZE PAGE_DIRECTORY_SIZE
-#define TOTAL_PAGE_COUNT PAGE_DIRECTORY_SIZE * PAGE_TABLE_SIZE
+#define TOTAL_PAGE_COUNT PAGE_DIRECTORY_SIZE *PAGE_TABLE_SIZE
 #define PAGE_SIZE 4096
-#define BYTES_IN_PAGE_TABLE (PAGE_TABLE_SIZE * PAGE_SIZE)
+#define MEMORY_IN_PAGE_TABLE (PAGE_TABLE_SIZE * PAGE_SIZE)
 #define PAGE_MASK_EMPTY 0xfffff000
 #define PAGE_MASK_PRESENT 0x1
+#define PAGE_MASK_NOT_PRESENT 0xfffffff0
 #define PAGE_MASK_READ_WRITE 0x2
 #define PAGE_MASK_RING0 0x0
 #define PAGE_MASK_RING3 0x4
@@ -31,10 +33,12 @@ void os3_disable_kernel_pages();
 int16_t next_page_directory();
 void release_page_directory(int16_t);
 void os3_init_page_directory(uint32_t *pd, os3_page_table_t *pt,
-			     uint32_t ram_start);
+                             uint32_t ram_start);
+void os3_page_set_flags(void *ptr, size_t n_pages, uint32_t flags);
+void *os3_get_pages(size_t n, uint32_t flags);
 
 static inline bool page_is_present(uint32_t p) {
-	return (p & PAGE_MASK_PRESENT) == PAGE_MASK_PRESENT;
+  return (p & PAGE_MASK_PRESENT) == PAGE_MASK_PRESENT;
 }
 
 #endif

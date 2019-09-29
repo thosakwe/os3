@@ -35,6 +35,8 @@ typedef struct {
 extern os3_tss_entry_t tss;
 
 extern void tss_flush();
-extern void usermode_jump(uint32_t entry_point);
+extern void os3_usermode_exit();
+extern uint8_t os3_usermode_exit_end;
+extern void usermode_jump(uint32_t entry_point, uint32_t return_addr);
 
 #endif

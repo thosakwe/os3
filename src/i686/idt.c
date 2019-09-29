@@ -91,24 +91,23 @@ extern void irq15();
 // Syscall interrupt
 extern void isr48();
 
-#define INTERRUPT(n, ptr, handler, sel, ring)                                 \
-  used_entries++;                                                             \
-  (ptr).offset_0_15 = (((uint32_t)(handler)) & 0xffff);                     \
-  (ptr).offset_16_31 = (((uint32_t)(handler)) >> 16) & 0xffff;              \
-  (ptr).selector = (sel);                                                    \
-  (ptr).always_zero = 0;                                                     \
-  (ptr).type_attr = (INTERRUPT_GATE_32_BIT |                                 \
-		      DESCRIPTOR_PRIVILEGE_RING##ring | DESCRIPTOR_PRESENT) | \
-		     0x60;                                                    \
-  (ptr).type_attr = 0x8e;
+#define INTERRUPT(n, ptr, handler, sel, ring)                                  \
+  used_entries++;                                                              \
+  (ptr).offset_0_15 = (((uint32_t)(handler)) & 0xffff);                        \
+  (ptr).offset_16_31 = (((uint32_t)(handler)) >> 16) & 0xffff;                 \
+  (ptr).selector = (sel);                                                      \
+  (ptr).always_zero = 0;                                                       \
+  (ptr).type_attr = (INTERRUPT_GATE_32_BIT | DESCRIPTOR_PRIVILEGE_RING##ring | \
+                     DESCRIPTOR_PRESENT) |                                     \
+                    0x60;                                                      
 //
 idt_entry_t idt_entries[256];
 idt_descriptor_t idt_descriptor;
 int used_entries = 0;
 
-#define DECLARE_ISR(type) \
+#define DECLARE_ISR(type)                                                      \
   INTERRUPT((type), idt_entries[(type)], (isr##type), 0x08, 0)
-#define DECLARE_IRQ(type) \
+#define DECLARE_IRQ(type)                                                      \
   INTERRUPT((type) + 32, idt_entries[(type) + 32], (irq##type), 0x08, 0)
 
 static void irq_enable(uint8_t no) {
@@ -201,9 +200,9 @@ void os3_setup_idt() {
     irq_enable(i);
   }
 
-	// Enable syscall 0x80.
-	DECLARE_ISR(128);
-	irq_enable(128);
+  // Enable syscall 0x80.
+  DECLARE_ISR(128);
+  irq_enable(128);
 
   // This is CRITICAL: Align the pointer on 16 bits.
   // I spent several hours hunting this down.
@@ -222,10 +221,10 @@ void os3_setup_idt() {
   // asm volatile("sti");
   // kwrites("IDT struct location: 0x");
   // kputi_r((uint32_t)&idt_descriptor, 16);
-	// kputc('\n');
+  // kputc('\n');
   // kwrites("IDT table[0] location: 0x");
   // kputi_r(idt_descriptor.offset, 16);
-	// kputc('\n');
+  // kputc('\n');
   // os3_flush_idt(&idt_descriptor);
 
   // TODO: Remove this

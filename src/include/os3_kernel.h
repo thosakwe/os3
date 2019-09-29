@@ -29,6 +29,7 @@ typedef struct {
 } __attribute__((packed)) os3_interrupt_t;
 
 void interrupt_handler(os3_interrupt_t* ctx);
+void os3_sysenter_entry();
 void handle_general_protection_fault(os3_interrupt_t* ctx);
 void handle_page_fault(os3_interrupt_t* ctx);
 void* get_page_fault_pointer();
@@ -71,6 +72,7 @@ void kputi_r(int val, int base);
 
 void kmemset(void* ptr, uint8_t value, size_t size);
 void kmemcpy(void* dst, void* src, unsigned long size);
+void kputptr(const char*, void*);
 
 /**
  * Finds the length of a string that is KNOWN to be <= 65535 characters long.

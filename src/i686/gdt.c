@@ -6,6 +6,10 @@ gdt_descriptor_t gdt_descriptor;
 gdt_entry_t gdt[6];
 os3_tss_entry_t tss;  // Single TSS entry for task-switching back to kernel
 
+void wtf() {
+	kputs("WTF? IT WORKED???");
+}
+
 // We don't use segmentation, so we provided a bare-minimum GDT.
 void os3_setup_gdt() {
   gdt_entry_t *null_descriptor = &gdt[0], *code_descriptor = &gdt[1],
@@ -19,7 +23,7 @@ void os3_setup_gdt() {
   gdt_describe(data_descriptor, 0, LIMIT_4GB, 0x92, 0xcf);
   gdt_describe(user_code_descriptor, 0, LIMIT_4GB, 0xfa, 0xcf);
   gdt_describe(user_data_descriptor, 0, LIMIT_4GB, 0xf2, 0xcf);
-  gdt_describe(tss_descriptor, tss_base, tss_base + sizeof(os3_tss_entry_t),
+  gdt_describe(tss_descriptor, tss_base, tss_base + sizeof(tss),
                0xe9, 0);
 
   // Describe the actual GDT.
@@ -35,7 +39,7 @@ void os3_setup_gdt() {
   tss.ds = 0x13;
   tss.fs = 0x13;
   tss.gs = 0x13;
-
+	
   // Load it!
   asm("lgdt %0" ::"m"(gdt_descriptor));
   os3_flush_gdt((uint32_t)&gdt_descriptor);
