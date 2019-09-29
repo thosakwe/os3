@@ -42,8 +42,9 @@ usermode_jump:
   # jmp *%ebx
 
   pushl $0x23 # SS (select the same segment as above)
-  # pushl %esp # ESP
-  pushl %ecx
+  pushl %esp # ESP
+  # int $0x3
+  # pushl %ecx
   pushf # EFLAGS
 
   # Re-enable interrupts after IRET:

@@ -33,6 +33,8 @@ void os3_sysenter_entry();
 void handle_general_protection_fault(os3_interrupt_t* ctx);
 void handle_page_fault(os3_interrupt_t* ctx);
 void* get_page_fault_pointer();
+extern void os3_usermode_exit();
+extern uint8_t os3_usermode_exit_end;
 
 typedef struct _os3 {
   os3_process_t* processes;

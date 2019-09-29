@@ -171,10 +171,12 @@ void *os3_get_pages(size_t n, uint32_t flags) {
         uint16_t page_index = i + j;
         uint16_t pde_index = page_index / PAGE_DIRECTORY_SIZE;
         uint16_t pt_index = page_index % PAGE_DIRECTORY_SIZE;
+        uint32_t offset = page_index * PAGE_SIZE;
         // Mark the directory present.
         page_directory[pde_index] |= PAGE_MASK_PRESENT | flags;
         // Mark the page present.
-        page_tables[pde_index].pages[pt_index] |= PAGE_MASK_PRESENT | flags;
+        page_tables[pde_index].pages[pt_index] =
+            offset | PAGE_MASK_PRESENT | flags;
       }
       uint16_t page_index = i;
       uint16_t pde_index = page_index / PAGE_DIRECTORY_SIZE;

@@ -41,7 +41,7 @@ bool os3_enter_process(os3_t *os3, os3_process_t *proc) {
   kputptr("Mapped proc to", page);
   kputptr("Extent of mapped memory", entry_point + proc->entry_point_size);
 
-  // // Fill the rest of the region with NOP (0x90).
+  // Fill the rest of the region with NOP (0x90).
   // uint32_t regionEnd = ((uint32_t)entry_point) + proc->entry_point_size;
   // uint32_t nopLength = (pages_needed * PAGE_SIZE) - regionEnd;
   // kmemset((void *)regionEnd, 0x90, nopLength);
