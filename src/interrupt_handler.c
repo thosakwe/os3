@@ -10,7 +10,7 @@ void os3_sysenter_entry() {
   }
 }
 
-void interrupt_handler(os3_interrupt_t *ctx) {
+uint8_t interrupt_handler(os3_interrupt_t *ctx) {
   // asm volatile("cli");
   // Acknowledge the PIC; send EOI
   outb(0x20, 0x20);
@@ -52,21 +52,26 @@ void interrupt_handler(os3_interrupt_t *ctx) {
       outb(0xa0, 0x20);
   } else if (ctx->number == 128) {
     kputs("GOT A SYSCALL!!!!");
+    kputptr("eax", ctx->eax);
+    if (ctx->eax == 0) {
+      // Don't iret.
+      return 1;
+    }
   } else {
     kwrites("Got unsupported interrupt: 0x");
     kputi_r(ctx->number, 16);
     kputc('\n');
   }
   // asm volatile("sti");
+  return 0;
 }
 
 void handle_general_protection_fault(os3_interrupt_t *ctx) {
   // If the page requested was not present, then cr2 will
   // specify the faulty address.
   void *ptr = get_page_fault_pointer();
-  kwrites("GPF on pointer: 0x");
-  // kputi_r((unsigned int)ptr, 16);
-  kputc('\n');
+  kputptr("GPF on pointer", ptr);
+  hang();
 }
 
 void handle_page_fault(os3_interrupt_t *ctx) {

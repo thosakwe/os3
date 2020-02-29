@@ -28,7 +28,7 @@ typedef struct {
   uint32_t ss;
 } __attribute__((packed)) os3_interrupt_t;
 
-void interrupt_handler(os3_interrupt_t* ctx);
+uint8_t interrupt_handler(os3_interrupt_t* ctx);
 void os3_sysenter_entry();
 void handle_general_protection_fault(os3_interrupt_t* ctx);
 void handle_page_fault(os3_interrupt_t* ctx);

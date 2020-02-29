@@ -3,8 +3,12 @@
 
 void userspace_demo() {
   // asm("int $32");
+  asm("mov $0, %eax");
   asm("int $0x80");
-  os3_usermode_exit();
+  // asm("pushl $0x1041d0");
+  asm("jmp *%0" :: "r"(&os3_usermode_exit));
+  asm("ret");
+  // os3_usermode_exit();
   // while (true) {
   //   continue;
   // }
@@ -74,18 +78,18 @@ void kernel_main(unsigned long magic, void *addr) {
       kputs(module->cmdline);
 
       // Start a process for each module.
-      os3_process_t *proc = os3_new_process(&os3);
-      if (proc == NULL) {
-        kputs("process alloc failed.");
-      } else {
-        proc->entry_point = (void *)module->mod_start;
-        proc->entry_point_size = module->mod_end - module->mod_start;
-        if (!os3_enter_process(&os3, proc)) {
-          kputs("process enter failed.");
-        } else {
-          kputs("process success");
-        }
-      }
+      // os3_process_t *proc = os3_new_process(&os3);
+      // if (proc == NULL) {
+      //   kputs("process alloc failed.");
+      // } else {
+      //   proc->entry_point = (void *)module->mod_start;
+      //   proc->entry_point_size = module->mod_end - module->mod_start;
+      //   if (!os3_enter_process(&os3, proc)) {
+      //     kputs("process enter failed.");
+      //   } else {
+      //     kputs("process success");
+      //   }
+      // }
     } break;
     case MULTIBOOT_TAG_TYPE_BOOTDEV: {
     } break;
@@ -96,14 +100,15 @@ void kernel_main(unsigned long magic, void *addr) {
   }
 
   // Create a simple process.
-  // os3_process_t *proc = os3_new_process(&os3);
-  // proc->entry_point = userspace_demo;
-  // // There's no way in C to do sizeof(userspace_demo), so
-  // // We just guess a size for the demo.
-  // proc->entry_point_size = 0x40;
-  // if (!os3_enter_process(&os3, proc)) {
-  //   kputs("process enter failed.");
-  // } else {
-  //   kputs("process worked");
-  // }
+  os3_process_t *proc = os3_new_process(&os3);
+  proc->entry_point = userspace_demo;
+  // There's no way in C to do sizeof(userspace_demo), so
+  // We just guess a size for the demo.
+  proc->entry_point_size = 0x40;
+  kputptr("usrexit", &os3_usermode_exit);
+  if (!os3_enter_process(&os3, proc)) {
+    kputs("process enter failed.");
+  } else {
+    kputs("process worked");
+  }
 }
